@@ -15,26 +15,27 @@ public class UserInterface extends JFrame {
         this.getContentPane().setBackground(Color.decode("#292929"));
         this.setSize(1024,728);
         this.setLocationRelativeTo(null);
-        this.setVisible(true);
         this.setTitle("Vending Machine");
 
         JPanel menuPanel = MakeMenuPanel();
         JPanel createPanel = new CreatePanel();
         JPanel modifyPanel = new ModifyPanel();
 
+        // Only register the embedded panels inside CardLayout
         mainPanel.add(menuPanel, "menuPanel");
         mainPanel.add(createPanel, "createPanel");
         mainPanel.add(modifyPanel, "modifyPanel");
 
         this.add(mainPanel);
+        this.setVisible(true);
     }
 
     private JPanel MakeMenuPanel()
     {
         // Image Icon
         Path path = Path.of("Pizza.png");
-        ImageIcon originalIcon =  new ImageIcon("src/Pizza.png");
-        Image scaledImage =  originalIcon.getImage().getScaledInstance(
+        ImageIcon originalIcon = new ImageIcon("src/Pizza.png");
+        Image scaledImage = originalIcon.getImage().getScaledInstance(
                 200,
                 200,
                 java.awt.Image.SCALE_SMOOTH);
@@ -61,8 +62,9 @@ public class UserInterface extends JFrame {
 
             switch (i)
             {
-                case 0 ->  menuName = "createPanel";
+                case 0 -> menuName = "createPanel";
                 case 1 -> menuName = "modifyPanel";
+                case 2 -> menuName = "testPanel"; // Handled specifically in createMenuButton
             }
 
             buttonPanel.add(createMenuButton(i, menuName), c);
@@ -123,7 +125,17 @@ public class UserInterface extends JFrame {
             }
         });
 
-        button.addActionListener(e -> panels.show(mainPanel, menuName));
+        // --- BUTTON ACTION HANDLER ---
+        button.addActionListener(e -> {
+            if ("testPanel".equals(menuName)) {
+                // Launch MachineMain as a new window/frame
+                MachineMain machineMain = new MachineMain();
+                machineMain.setVisible(true);
+            } else {
+                // Switch CardLayout for Create and Modify panels
+                panels.show(mainPanel, menuName);
+            }
+        });
 
         Dimension size = new Dimension(250, 50);
         button.setPreferredSize(size);

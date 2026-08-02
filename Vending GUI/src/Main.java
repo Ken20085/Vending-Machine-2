@@ -9,5 +9,9 @@ public class Main
         JFrame frame;
         frame = new UserInterface();
         frame.setVisible(true);
+
+//        JFrame frame = new JFrame();
+//        frame = new MachineMain();
+//        frame.setVisible(true);
     }
 }

@@ -1,11 +1,18 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.nio.file.Path;
 
 public class ModifyPanel extends JPanel {
 
     private final CardLayout configPanels = new CardLayout();
     private final JPanel configHolder = new JPanel(configPanels);
+
+    // Track active selection styling
+    private JButton currentlySelectedButton = null;
+    private final Color defaultBg = Color.decode("#181825");
+    private final Color highlightColor = Color.decode("#f2cdcd");
+    private final Color highlightTextColor = Color.decode("#4c4f69");
 
     public ModifyPanel() {
         this.setLayout(new GridBagLayout());
@@ -30,26 +37,18 @@ public class ModifyPanel extends JPanel {
 
         configPanel.add(sidePanel(configC), configC);
 
-        // --- CONTENT ---
-//        JPanel contentPanel = new JPanel(new GridBagLayout());
-//        contentPanel.setBackground(Color.decode("#1e1e2e"));
-//        GridBagConstraints contentC = new GridBagConstraints();
-//
-//        JLabel contentLabel = new JLabel("Select a menu to continue");
-//        contentLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 20));
-//        contentLabel.setForeground(Color.decode("#4c4f69"));
-//
-//        contentC.insets = new Insets(10,10,0,10);
-//        contentC.gridx = 0;
-//        contentC.gridy = 0;
-//        contentC.weightx = 1.0;
-//        contentC.weighty = 1.0;
-//        contentC.anchor = GridBagConstraints.CENTER;
-//
-//        contentPanel.add(contentLabel, contentC);
+        // --- REGISTER PANELS IN CARDLAYOUT ---
+        configHolder.add(createPlaceholderPanel("Select a menu to continue"), "SelectMenu");
+        configHolder.add(new DashboardPanel(), "Dashboard");
+        configHolder.add(new StockPanel(), "Item Stock");
 
-        // Add to config holder code
-        configHolder.add(new StockPanel(), "startConfig");
+        // --- ADD CASH REGISTER PANEL HERE ---
+        configHolder.add(new CashRegisterPanel(), "Cash Register");
+
+        configHolder.add(createPlaceholderPanel("History View"), "History");
+
+        // Set initial view to the blank/placeholder panel
+        configPanels.show(configHolder, "SelectMenu");
 
         configC.gridx = 1;
         configC.weightx = 1.0;
@@ -73,30 +72,43 @@ public class ModifyPanel extends JPanel {
         c2.fill = GridBagConstraints.HORIZONTAL;
         c2.anchor = GridBagConstraints.PAGE_START;
 
-        sideBar.setBackground(Color.decode("#181825"));
+        sideBar.setBackground(defaultBg);
         sideBar.setPreferredSize(new Dimension(250,0));
 
-        Path path = Path.of("Pizza.png");
-        ImageIcon originalIcon =  new ImageIcon("src/Pizza.png");
-        Image scaledImage =  originalIcon.getImage().getScaledInstance(
-                20,
-                20,
-                java.awt.Image.SCALE_SMOOTH);
-        ImageIcon scaledIcon = new ImageIcon(scaledImage);
-
-        sideBar.add(createButton("Dashboard", setIcon("Dashboard")), c2);
+        // Side Navigation Buttons
+        sideBar.add(createButton("Dashboard", setIcon("Dashboard"), "Dashboard"), c2);
 
         c2.gridy = 1;
-        sideBar.add(createButton("Item Stock", setIcon("ItemStock")), c2);
+        sideBar.add(createButton("Item Stock", setIcon("ItemStock"), "Item Stock"), c2);
 
         c2.gridy = 2;
-        sideBar.add(createButton("Cash Register", setIcon("CashRegister")), c2);
+        sideBar.add(createButton("Cash Register", setIcon("CashRegister"), "Cash Register"), c2);
 
         c2.gridy = 3;
-        sideBar.add(createButton("History", setIcon("History")), c2);
+        sideBar.add(createButton("History", setIcon("History"), "History"), c2);
 
         c2.gridy = 4;
-        sideBar.add(createButton("Return to menu", scaledIcon), c2);
+
+        // Icon setup
+        Path path = Path.of("Pizza.png");
+        ImageIcon originalIcon = new ImageIcon("src/Pizza.png");
+        Image scaledImage = originalIcon.getImage().getScaledInstance(20, 20, java.awt.Image.SCALE_SMOOTH);
+        ImageIcon scaledIcon = new ImageIcon(scaledImage);
+
+        // --- RETURN TO USER INTERFACE MENU ---
+        JButton returnBtn = createButton("Return to menu", scaledIcon, null);
+        returnBtn.addActionListener(e -> {
+            // Reset active button highlight when navigating away
+            setSelectedButton(null);
+            configPanels.show(configHolder, "SelectMenu");
+
+            Container parent = this.getParent();
+            if (parent != null && parent.getLayout() instanceof CardLayout parentLayout) {
+                parentLayout.show(parent, "menuPanel");
+            }
+        });
+
+        sideBar.add(returnBtn, c2);
 
         c2.gridy = 5;
         c2.weighty = 1.0;
@@ -114,11 +126,9 @@ public class ModifyPanel extends JPanel {
         return sideBar;
     }
 
-    private JButton createButton(String name, ImageIcon icon)
+    private JButton createButton(String name, ImageIcon icon, String cardName)
     {
         JButton button = new JButton();
-
-        Color color =  Color.decode("#f2cdcd");
 
         // Styling
         button.setOpaque(true);
@@ -126,7 +136,7 @@ public class ModifyPanel extends JPanel {
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createEmptyBorder(10, 40, 10, 15));
         button.setFont(new Font("JetBrains Mono", Font.BOLD, 13));
-        button.setForeground(color);
+        button.setForeground(highlightColor);
 
         button.setIconTextGap(12);
         button.setHorizontalAlignment(SwingConstants.LEFT);
@@ -139,34 +149,69 @@ public class ModifyPanel extends JPanel {
         button.setMinimumSize(size);
         button.setMaximumSize(size);
 
+        if (cardName != null) {
+            button.addActionListener(e -> {
+                setSelectedButton(button);
+                configPanels.show(configHolder, cardName);
+            });
+        }
+
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(color);
-                button.setForeground(Color.decode("#4c4f69"));
-                button.setContentAreaFilled(true); // Fill background on hover
+                if (button != currentlySelectedButton) {
+                    button.setBackground(highlightColor);
+                    button.setForeground(highlightTextColor);
+                    button.setContentAreaFilled(true);
+                }
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setContentAreaFilled(false);
-                button.setForeground(color);
+                if (button != currentlySelectedButton) {
+                    button.setContentAreaFilled(false);
+                    button.setForeground(highlightColor);
+                }
             }
         });
 
         return button;
     }
 
+    private void setSelectedButton(JButton button) {
+        // Reset previously selected button visual state
+        if (currentlySelectedButton != null) {
+            currentlySelectedButton.setContentAreaFilled(false);
+            currentlySelectedButton.setForeground(highlightColor);
+        }
+
+        // Apply visual state to newly selected button
+        currentlySelectedButton = button;
+        if (currentlySelectedButton != null) {
+            currentlySelectedButton.setBackground(highlightColor);
+            currentlySelectedButton.setForeground(highlightTextColor);
+            currentlySelectedButton.setContentAreaFilled(true);
+        }
+    }
+
     private ImageIcon setIcon(String iconName)
     {
-        Path path = Path.of(iconName + ".png");
-        ImageIcon originalIcon =  new ImageIcon("src/" + iconName + ".png");
-        Image scaledImage =  originalIcon.getImage().getScaledInstance(
+        ImageIcon originalIcon = new ImageIcon("src/" + iconName + ".png");
+        Image scaledImage = originalIcon.getImage().getScaledInstance(
                 20,
                 20,
                 java.awt.Image.SCALE_SMOOTH);
 
-
         return new ImageIcon(scaledImage);
+    }
+
+    private JPanel createPlaceholderPanel(String text) {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(Color.decode("#1e1e2e"));
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("JetBrains Mono", Font.BOLD, 20));
+        label.setForeground(Color.decode("#4c4f69"));
+        panel.add(label);
+        return panel;
     }
 }
