@@ -1,10 +1,12 @@
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class StockPanel extends JPanel {
+public class StockPanel extends JPanel implements Refreshable {
 
     private final Color MOCHA_BASE     = Color.decode("#1e1e2e");
     private final Color MOCHA_MANTLE   = Color.decode("#181825");
@@ -13,6 +15,10 @@ public class StockPanel extends JPanel {
     private final Color MOCHA_TEXT     = Color.decode("#cdd6f4");
     private final Color MOCHA_GREEN    = Color.decode("#a6e3a1");
     private final Color MOCHA_RED      = Color.decode("#f38ba8");
+
+    private RegularVM vendingMachine;
+
+    JPanel gridPanel;
 
     // Inventory map tracking live stock counts
     private final Map<String, Integer> itemInventory = getHardcodedStockInventory();
@@ -29,13 +35,9 @@ public class StockPanel extends JPanel {
         this.add(titleLabel, BorderLayout.NORTH);
 
         // Main Grid Panel for Box Cards (3 columns)
-        JPanel gridPanel = new JPanel(new GridLayout(0, 3, 15, 15));
+        gridPanel = new JPanel(new GridLayout(0, 3, 15, 15));
         gridPanel.setBackground(MOCHA_BASE);
         gridPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
-
-        for (Map.Entry<String, Integer> entry : itemInventory.entrySet()) {
-            gridPanel.add(createStockCard(entry.getKey(), entry.getValue()));
-        }
 
         // ScrollPane Setup
         JScrollPane scrollPane = new JScrollPane(gridPanel);
@@ -64,6 +66,8 @@ public class StockPanel extends JPanel {
         });
 
         this.add(scrollPane, BorderLayout.CENTER);
+
+        refresh();
     }
 
     /**
@@ -148,9 +152,8 @@ public class StockPanel extends JPanel {
                 int amountToAdd = Integer.parseInt(addAmountInput.getText().trim());
                 if (amountToAdd > 0) {
                     // Update inventory map
-                    int currentStock = itemInventory.getOrDefault(itemName, 0);
-                    int updatedStock = currentStock + amountToAdd;
-                    itemInventory.put(itemName, updatedStock);
+                    vendingMachine.RestockItem(itemName, amountToAdd);
+                    int updatedStock = vendingMachine.getItem(itemName).getStock();
 
                     // Update UI card label and border color
                     countLabel.setText(updatedStock + " pcs left");
@@ -193,5 +196,29 @@ public class StockPanel extends JPanel {
         card.add(controlPanel, c);
 
         return card;
+    }
+
+    @Override
+    public void refresh()
+    {
+        vendingMachine = MachineFactory.getVendingMachine();
+
+        if (vendingMachine == null)
+        {
+            gridPanel.removeAll();
+            gridPanel.repaint();
+            return;
+        }
+
+        gridPanel.removeAll();
+        ArrayList<MachineItem> items =  vendingMachine.getItems();
+
+        for (MachineItem item : items)
+        {
+            gridPanel.add(createStockCard(item.getName(), item.getStock()));
+        }
+
+        gridPanel.revalidate();
+        gridPanel.repaint();
     }
 }

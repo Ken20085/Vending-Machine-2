@@ -404,11 +404,4 @@ public class MachineMain extends JFrame {
 
         return label;
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            MachineMain frame = new MachineMain();
-            frame.setVisible(true);
-        });
-    }
 }

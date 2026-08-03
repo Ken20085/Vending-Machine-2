@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.nio.file.Path;
 
 public class ModifyPanel extends JPanel {
@@ -13,6 +12,9 @@ public class ModifyPanel extends JPanel {
     private final Color defaultBg = Color.decode("#181825");
     private final Color highlightColor = Color.decode("#f2cdcd");
     private final Color highlightTextColor = Color.decode("#4c4f69");
+
+    private final DashboardPanel dashboardPanel = new DashboardPanel();
+    private final StockPanel stockPanel = new StockPanel();
 
     public ModifyPanel() {
         this.setLayout(new GridBagLayout());
@@ -39,8 +41,8 @@ public class ModifyPanel extends JPanel {
 
         // --- REGISTER PANELS IN CARDLAYOUT ---
         configHolder.add(createPlaceholderPanel("Select a menu to continue"), "SelectMenu");
-        configHolder.add(new DashboardPanel(), "Dashboard");
-        configHolder.add(new StockPanel(), "Item Stock");
+        configHolder.add(dashboardPanel, "Dashboard");
+        configHolder.add(stockPanel, "Item Stock");
 
         // --- ADD CASH REGISTER PANEL HERE ---
         configHolder.add(new CashRegisterPanel(), "Cash Register");
@@ -91,7 +93,7 @@ public class ModifyPanel extends JPanel {
 
         // Icon setup
         Path path = Path.of("Pizza.png");
-        ImageIcon originalIcon = new ImageIcon("src/Pizza.png");
+        ImageIcon originalIcon = new ImageIcon("src/UserInterfaceUtils/Pizza.png");
         Image scaledImage = originalIcon.getImage().getScaledInstance(20, 20, java.awt.Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
 
@@ -152,6 +154,15 @@ public class ModifyPanel extends JPanel {
         if (cardName != null) {
             button.addActionListener(e -> {
                 setSelectedButton(button);
+
+                // --- REFRESH LOGIC ---
+                // If the panel implements Refreshable, refresh it before showing
+                if ("Dashboard".equals(cardName)) {
+                    dashboardPanel.refresh();
+                } else if ("Item Stock".equals(cardName)) {
+                    stockPanel.refresh();
+                }
+
                 configPanels.show(configHolder, cardName);
             });
         }

@@ -18,7 +18,7 @@ public class PaymentPanel extends JFrame {
     private final double totalAmountDue;
     private double totalCashHanded = 0.0;
 
-    // --- Denomination State Arrays (Replaces HashMap) ---
+    // --- Denomination State Arrays ---
     private static final int[] DENOMINATIONS = {1000, 500, 200, 100, 50, 20, 10, 5, 1};
     private final int[] denominationCounts = new int[DENOMINATIONS.length];
     private final JLabel[] countLabels = new JLabel[DENOMINATIONS.length];
@@ -204,9 +204,6 @@ public class PaymentPanel extends JFrame {
         return container;
     }
 
-    /**
-     * Creates a single row with [-] [ Count ] [+] buttons using array indexes.
-     */
     private JPanel createDenominationRow(int index) {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
@@ -229,7 +226,6 @@ public class PaymentPanel extends JFrame {
 
         JButton btnPlus = createCounterButton("+");
 
-        // Save reference in array for direct index access
         countLabels[index] = countLabel;
 
         btnMinus.addActionListener(e -> {
@@ -268,9 +264,6 @@ public class PaymentPanel extends JFrame {
         return btn;
     }
 
-    /**
-     * Re-calculates total cash handed and change due using array iteration.
-     */
     private void updateCalculations() {
         totalCashHanded = 0.0;
 
@@ -290,7 +283,7 @@ public class PaymentPanel extends JFrame {
             double remaining = totalAmountDue - totalCashHanded;
             changeDueLabel.setText(String.format("-Php %.2f", remaining));
             changeDueLabel.setForeground(MOCHA_RED);
-            btnFinalize.setEnabled(false); // Disabled until sufficient cash is provided
+            btnFinalize.setEnabled(false);
         }
     }
 

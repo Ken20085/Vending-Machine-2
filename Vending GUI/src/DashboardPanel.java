@@ -1,10 +1,12 @@
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class DashboardPanel extends JPanel {
+public class DashboardPanel extends JPanel implements Refreshable {
 
     private final Color MOCHA_BASE = Color.decode("#1e1e2e");
     private final Color MOCHA_MANTLE = Color.decode("#181825");
@@ -15,7 +17,12 @@ public class DashboardPanel extends JPanel {
     private final Color MOCHA_GREEN = Color.decode("#a6e3a1");
     private final Color MOCHA_RED = Color.decode("#f38ba8");
 
+    private RegularVM vendingMachine;
+
+    JPanel gridPanel;
+
     public DashboardPanel() {
+
         this.setLayout(new BorderLayout());
         this.setBackground(MOCHA_BASE);
 
@@ -27,15 +34,19 @@ public class DashboardPanel extends JPanel {
         this.add(titleLabel, BorderLayout.NORTH);
 
         // Main Grid Panel inside JScrollPane
-        JPanel gridPanel = new JPanel(new GridLayout(0, 4, 15, 15));
+        gridPanel = new JPanel(new GridLayout(0, 4, 15, 15));
         gridPanel.setBackground(MOCHA_BASE);
         gridPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
-        // Filtered Stock Data (Toppings and Sauces only)
-        Map<String, Integer> stockData = getStockInventory();
+        // Filtered Stock Data
+        if (vendingMachine != null)
+        {
+            ArrayList<MachineItem> machineItems;
+            machineItems = vendingMachine.getItems();
 
-        for (Map.Entry<String, Integer> entry : stockData.entrySet()) {
-            gridPanel.add(createStockCard(entry.getKey(), entry.getValue()));
+            for (MachineItem item: machineItems) {
+                gridPanel.add(createStockCard(item.getName(), item.getStock()));
+            }
         }
 
         // ScrollPane Wrapper
@@ -130,5 +141,28 @@ public class DashboardPanel extends JPanel {
         card.add(countLabel, c);
 
         return card;
+    }
+
+    @Override
+    public void refresh() {
+        vendingMachine = MachineFactory.getVendingMachine();
+
+        if (vendingMachine == null)
+        {
+            gridPanel.removeAll();
+            gridPanel.repaint();
+            return;
+        }
+
+        ArrayList<MachineItem> items =  vendingMachine.getItems();
+
+        gridPanel.removeAll();
+        for (MachineItem item : items)
+        {
+            gridPanel.add(createStockCard(item.getName(), item.getStock()));
+        }
+
+        gridPanel.revalidate();
+        gridPanel.repaint();
     }
 }

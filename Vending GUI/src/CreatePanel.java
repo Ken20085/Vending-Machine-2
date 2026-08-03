@@ -1,152 +1,247 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class CreatePanel extends JPanel {
 
-    public CreatePanel()
-    {
+    // --- Catppuccin Mocha Color Palette ---
+    private final Color MOCHA_BASE      = Color.decode("#1e1e2e");
+    private final Color MOCHA_SURFACE0  = Color.decode("#313244");
+    private final Color MOCHA_SURFACE1  = Color.decode("#45475a");
+    private final Color MOCHA_TEXT      = Color.decode("#cdd6f4");
+    private final Color MOCHA_SUBTEXT   = Color.decode("#a6adc8");
+    private final Color MOCHA_ROSEWATER = Color.decode("#f5e0dc");
+    private final Color MOCHA_GREEN     = Color.decode("#a6e3a1");
+    private final Color MOCHA_RED       = Color.decode("#f38ba8");
+    private final Color MOCHA_CRUST     = Color.decode("#11111b");
+
+    // Form inputs
+    private JTextField nameField;
+    private JButton btnSimpleType;
+    private JButton btnSpecialType;
+
+    // Action buttons
+    private JButton btnCreate;
+    private JButton btnCancel;
+
+    // Selected state ("Simple" or "Special")
+    private String selectedType = "Simple";
+
+    public CreatePanel() {
         this.setLayout(new GridBagLayout());
-        this.setBackground(Color.decode("#1e1e2e"));
-        GridBagConstraints c = new GridBagConstraints();
+        this.setBackground(MOCHA_BASE);
 
-        // TITLE
-        JPanel titlePanel = new JPanel(new GridBagLayout());
-        titlePanel.setBackground(Color.decode("#181825"));
-        GridBagConstraints titleC = new GridBagConstraints();
-        titleC.fill = GridBagConstraints.HORIZONTAL;
-        titleC.weightx = 1.0;
-        titleC.insets = new Insets(10,10,10,10);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2; // Span across both columns
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 30, 0, 30);
 
+        // --- TITLE ---
         JLabel titleLabel = new JLabel("Create Vending Machine");
-        titleLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 20));
-        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 22));
+        titleLabel.setForeground(MOCHA_TEXT);
+        this.add(titleLabel, gbc);
 
-        titlePanel.add(titleLabel, titleC);
+        // --- SECTION 1: NAME INPUT ---
+        gbc.gridy++;
+        gbc.insets = new Insets(20, 30, 5, 30);
+        JLabel nameLabel = new JLabel("Vending Machine Name");
+        nameLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 13));
+        nameLabel.setForeground(MOCHA_SUBTEXT);
+        this.add(nameLabel, gbc);
 
-        c.gridx = 0;
-        c.gridy = 0;
-        c.weightx = 1.0;
-        c.weighty = 0.0;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(10,10,0,10);
-        this.add(titlePanel, c);
+        gbc.gridy++;
+        gbc.insets = new Insets(0, 30, 20, 30);
+        nameField = new JTextField();
+        nameField.setFont(new Font("JetBrains Mono", Font.PLAIN, 14));
+        nameField.setBackground(MOCHA_SURFACE0);
+        nameField.setForeground(MOCHA_TEXT);
+        nameField.setCaretColor(MOCHA_TEXT);
+        nameField.setPreferredSize(new Dimension(350, 40));
+        nameField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(MOCHA_SURFACE1, 1),
+                BorderFactory.createEmptyBorder(5, 10, 5, 10)
+        ));
+        this.add(nameField, gbc);
 
-        c.gridx = 0;
-        c.gridy = 1;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        c.fill = GridBagConstraints.BOTH;
+        // --- SECTION 2: TYPE SELECTION ---
+        gbc.gridy++;
+        gbc.insets = new Insets(0, 30, 8, 30);
+        JLabel typeLabel = new JLabel("Select Vending Machine Type");
+        typeLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 13));
+        typeLabel.setForeground(MOCHA_SUBTEXT);
+        this.add(typeLabel, gbc);
 
-        this.add(configPanel(), c);
+        // Grid row for the 2 type buttons
+        gbc.gridy++;
+        gbc.gridwidth = 1; // Split into 2 columns
+        gbc.weightx = 0.5;
+
+        btnSimpleType = createTypeButton("Simple Machine");
+        btnSpecialType = createTypeButton("Special Machine");
+
+        // Set default active selection styling
+        updateButtonSelection(btnSimpleType, true);
+        updateButtonSelection(btnSpecialType, false);
+
+        btnSimpleType.addActionListener(e -> {
+            selectedType = "Simple";
+            updateButtonSelection(btnSimpleType, true);
+            updateButtonSelection(btnSpecialType, false);
+        });
+
+        btnSpecialType.addActionListener(e -> {
+            selectedType = "Special";
+            updateButtonSelection(btnSimpleType, false);
+            updateButtonSelection(btnSpecialType, true);
+        });
+
+        gbc.gridx = 0;
+        gbc.insets = new Insets(0, 30, 25, 7);
+        this.add(btnSimpleType, gbc);
+
+        gbc.gridx = 1;
+        gbc.insets = new Insets(0, 7, 25, 30);
+        this.add(btnSpecialType, gbc);
+
+        // --- SECTION 3: ACTION BUTTONS (CREATE & CANCEL) ---
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        gbc.insets = new Insets(0, 30, 0, 30);
+
+        JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        actionPanel.setOpaque(false);
+
+        btnCancel = createActionButton("Cancel", MOCHA_RED, MOCHA_CRUST);
+        btnCreate = createActionButton("Create", MOCHA_GREEN, MOCHA_CRUST);
+
+        // Cancel button: Resets form and returns to menu
+        btnCancel.addActionListener(e -> {
+            resetForm();
+            returnToMenuPanel();
+        });
+
+        // Create button: Prints to console, resets form, and returns to menu
+        btnCreate.addActionListener(e -> {
+
+            MachineFactory.createMachine(getSelectedType(), getVendingMachineName());
+
+            resetForm();
+            returnToMenuPanel();
+        });
+
+        actionPanel.add(btnCancel);
+        actionPanel.add(btnCreate);
+
+        this.add(actionPanel, gbc);
     }
 
-    private JPanel configPanel()
-    {
-        // CONFIGURATION SETUP
-        JPanel configPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints configC = new GridBagConstraints();
-        configPanel.setBackground(Color.decode("#1e1e2e"));
-
-        configPanel.add(sidePanel(configC), configC);
-
-        // --- CONTENT ---
-        JPanel contentPanel = new JPanel(new GridBagLayout());
-        contentPanel.setBackground(Color.decode("#181825"));
-        GridBagConstraints contentC = new GridBagConstraints();
-
-        JLabel contentLabel = new JLabel("Create Vending Machine");
-        contentLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 20));
-        contentLabel.setForeground(Color.WHITE);
-
-        contentC.insets = new Insets(10,10,10,10);
-        contentC.gridx = 0;
-        contentC.gridy = 0;
-        contentC.weightx = 1.0;
-        contentC.weighty = 1.0;
-        contentC.anchor = GridBagConstraints.NORTH;
-
-        contentPanel.add(contentLabel, contentC);
-
-        configC.gridx = 1;
-        configC.weightx = 1.0;
-        configC.fill = GridBagConstraints.BOTH;
-        configC.insets = new Insets(0, 10, 10, 0);
-
-        configPanel.add(contentPanel, configC);
-
-        return configPanel;
-    }
-
-    private JPanel sidePanel(GridBagConstraints configC)
-    {
-        // --- SIDE BAR ---
-        JPanel sideBar = new JPanel(new GridBagLayout());
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.insets = new Insets(5,10,5,10);
-        c2.gridx = 0;
-        c2.gridy = 0;
-        c2.weightx = 1.0;
-        c2.weighty = 0.0;
-        c2.fill = GridBagConstraints.HORIZONTAL;
-        c2.anchor = GridBagConstraints.PAGE_START;
-
-        sideBar.setBackground(Color.decode("#181825"));
-        sideBar.setPreferredSize(new Dimension(200,0));
-
-        // button
-        sideBar.add(createButton(), c2);
-
-        c2.gridy = 1;
-        c2.weighty = 1.0;
-        sideBar.add(Box.createVerticalGlue(), c2);
-
-        configC.gridx = 0;
-        configC.gridy = 0;
-        configC.weightx = 0.0;
-        configC.weighty = 1.0;
-        configC.anchor = GridBagConstraints.WEST;
-        configC.fill = GridBagConstraints.VERTICAL;
-        configC.insets = new Insets(0,0,10,0);
-
-        return sideBar;
-    }
-
-    private JButton createButton()
-    {
-        JButton button = new JButton();
-
-        Color color =  Color.decode("#89dceb");
-
-        // Styling
-        button.setOpaque(true);
-        button.setContentAreaFilled(false);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createLineBorder(color, 2));
+    private JButton createTypeButton(String text) {
+        JButton button = new JButton(text);
         button.setFont(new Font("JetBrains Mono", Font.BOLD, 13));
-        button.setForeground(color);
+        button.setPreferredSize(new Dimension(180, 45));
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        button.setText("Select Type");
-
-        Dimension size = new Dimension(250, 50);
-        button.setPreferredSize(size);
-        button.setMinimumSize(size);
-        button.setMaximumSize(size);
-
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
+        button.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setBackground(color);
-                button.setForeground(Color.decode("#4c4f69"));
-                button.setContentAreaFilled(true); // Fill background on hover
+            public void mouseEntered(MouseEvent evt) {
+                if (!isButtonSelected(button)) {
+                    button.setBackground(MOCHA_SURFACE0);
+                }
             }
 
             @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setContentAreaFilled(false);
-                button.setForeground(color);
+            public void mouseExited(MouseEvent evt) {
+                if (!isButtonSelected(button)) {
+                    button.setBackground(MOCHA_BASE);
+                }
             }
         });
 
         return button;
+    }
+
+    private JButton createActionButton(String text, Color bgColor, Color fgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("JetBrains Mono", Font.BOLD, 14));
+        button.setBackground(bgColor);
+        button.setForeground(fgColor);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setPreferredSize(new Dimension(130, 40));
+        button.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        return button;
+    }
+
+    private boolean isButtonSelected(JButton button) {
+        if (button == btnSimpleType && "Simple".equals(selectedType)) return true;
+        return button == btnSpecialType && "Special".equals(selectedType);
+    }
+
+    private void updateButtonSelection(JButton button, boolean isSelected) {
+        if (isSelected) {
+            button.setBackground(MOCHA_ROSEWATER);
+            button.setForeground(MOCHA_CRUST);
+            button.setBorder(BorderFactory.createLineBorder(MOCHA_ROSEWATER, 2));
+        } else {
+            button.setBackground(MOCHA_BASE);
+            button.setForeground(MOCHA_ROSEWATER);
+            button.setBorder(BorderFactory.createLineBorder(MOCHA_ROSEWATER, 1));
+        }
+    }
+
+    /**
+     * Resets input fields to default values
+     */
+    public void resetForm() {
+        nameField.setText("");
+        selectedType = "Simple";
+        updateButtonSelection(btnSimpleType, true);
+        updateButtonSelection(btnSpecialType, false);
+    }
+
+    /**
+     * Navigation logic copied from ModifyPanel[cite: 3]
+     */
+    private void returnToMenuPanel() {
+        Container parent = this.getParent();
+        if (parent != null && parent.getLayout() instanceof CardLayout parentLayout) {
+            parentLayout.show(parent, "menuPanel");
+        }
+    }
+
+    // Action Listener hooks
+    public void addCreateActionListener(ActionListener listener) {
+        btnCreate.addActionListener(listener);
+    }
+
+    public void addCancelActionListener(ActionListener listener) {
+        btnCancel.addActionListener(listener);
+    }
+
+    // Getters
+    public String getVendingMachineName() {
+        return nameField.getText().trim();
+    }
+
+    public String getSelectedType() {
+        return selectedType;
+    }
+
+    public JButton getCreateButton() {
+        return btnCreate;
+    }
+
+    public JButton getCancelButton() {
+        return btnCancel;
     }
 }

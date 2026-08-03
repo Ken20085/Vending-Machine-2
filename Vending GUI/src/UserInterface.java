@@ -3,10 +3,12 @@ import java.awt.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-public class UserInterface extends JFrame {
+public class UserInterface extends JFrame implements Refreshable{
 
     private final CardLayout panels = new CardLayout();
     private final JPanel mainPanel = new JPanel(panels);
+
+    private RegularVM vendingMachine;
 
     public UserInterface()
     {
@@ -28,6 +30,8 @@ public class UserInterface extends JFrame {
 
         this.add(mainPanel);
         this.setVisible(true);
+
+        refresh();
     }
 
     private JPanel MakeMenuPanel()
@@ -102,8 +106,7 @@ public class UserInterface extends JFrame {
 
         button.setText(Helper.setButtonName(i, buttonNames));
 
-        // Styling
-        button.setOpaque(true);
+        // Styling        button.setOpaque(true);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createLineBorder(Color.decode("#f2cdcd"), 2));
@@ -129,8 +132,18 @@ public class UserInterface extends JFrame {
         button.addActionListener(e -> {
             if ("testPanel".equals(menuName)) {
                 // Launch MachineMain as a new window/frame
-                MachineMain machineMain = new MachineMain();
-                machineMain.setVisible(true);
+
+                if (MachineFactory.machineType == 0)
+                {
+                    refresh();
+                    SimpleVendingMachineFrame machineFrame = new SimpleVendingMachineFrame(vendingMachine);
+                    machineFrame.setVisible(true);
+                }
+                else if (MachineFactory.machineType == 1)
+                {
+                    MachineMain machineMain = new MachineMain();
+                    machineMain.setVisible(true);
+                }
             } else {
                 // Switch CardLayout for Create and Modify panels
                 panels.show(mainPanel, menuName);
@@ -143,5 +156,11 @@ public class UserInterface extends JFrame {
         button.setMaximumSize(size);
 
         return button;
+    }
+
+    @Override
+    public void refresh()
+    {
+        this.vendingMachine = MachineFactory.getVendingMachine();
     }
 }
