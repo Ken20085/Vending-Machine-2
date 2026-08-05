@@ -12,4 +12,12 @@ public class SpecialMachineStep {
     public String getName() {
         return name;
     }
+
+    public void addItem(MachineItem item) {
+        this.items.add(item);
+    }
+
+    public ArrayList<MachineItem> getItems() {
+        return items;
+    }
 }
