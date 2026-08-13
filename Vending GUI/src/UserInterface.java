@@ -9,6 +9,11 @@ public class UserInterface extends JFrame implements Refreshable{
     private final JPanel mainPanel = new JPanel(panels);
 
     private RegularVM vendingMachine;
+    private SpecialMachine specialMachine;
+
+    // Instance variables exposed to the Controller
+    private final CreatePanel createPanel = new CreatePanel();
+    private final ModifyPanel modifyPanel = new ModifyPanel();
 
     public UserInterface()
     {
@@ -20,13 +25,11 @@ public class UserInterface extends JFrame implements Refreshable{
         this.setTitle("Vending Machine");
 
         JPanel menuPanel = MakeMenuPanel();
-        JPanel createPanel = new CreatePanel();
-        JPanel modifyPanel = new ModifyPanel();
 
-        // Only register the embedded panels inside CardLayout
+        // FIX: Use the class-level instance variables instead of redeclaring local ones
         mainPanel.add(menuPanel, "menuPanel");
-        mainPanel.add(createPanel, "createPanel");
-        mainPanel.add(modifyPanel, "modifyPanel");
+        mainPanel.add(this.createPanel, "createPanel");
+        mainPanel.add(this.modifyPanel, "modifyPanel");
 
         this.add(mainPanel);
         this.setVisible(true);
@@ -36,24 +39,19 @@ public class UserInterface extends JFrame implements Refreshable{
 
     private JPanel MakeMenuPanel()
     {
-        // Image Icon
         Path path = Path.of("Pizza.png");
         ImageIcon originalIcon = new ImageIcon("src/Pizza.png");
         Image scaledImage = originalIcon.getImage().getScaledInstance(
-                200,
-                200,
-                java.awt.Image.SCALE_SMOOTH);
+                200, 200, java.awt.Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
 
         JLabel iconImage = new JLabel(scaledIcon);
         this.setIconImage(scaledImage);
 
-        // Title Screen
         JLabel titleFrame = new JLabel("Welcome to Pizza Making Factory");
         titleFrame.setFont(new Font("JetBrains Mono", Font.BOLD, 30));
         titleFrame.setForeground(Color.WHITE);
 
-        // 3 Buttons
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(0,10,10,10);
@@ -63,18 +61,15 @@ public class UserInterface extends JFrame implements Refreshable{
         for (int i = 0; i < 3; i++)
         {
             String menuName = "";
-
             switch (i)
             {
                 case 0 -> menuName = "createPanel";
                 case 1 -> menuName = "modifyPanel";
-                case 2 -> menuName = "testPanel"; // Handled specifically in createMenuButton
+                case 2 -> menuName = "testPanel";
             }
-
             buttonPanel.add(createMenuButton(i, menuName), c);
         }
 
-        // Version Number
         JLabel versionText = new JLabel("projectpizza v2.0");
         versionText.setFont(new Font("JetBrains Mono", Font.BOLD, 15));
         versionText.setForeground(Color.decode("#45475a"));
@@ -106,7 +101,7 @@ public class UserInterface extends JFrame implements Refreshable{
 
         button.setText(Helper.setButtonName(i, buttonNames));
 
-        // Styling        button.setOpaque(true);
+        button.setOpaque(true);
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createLineBorder(Color.decode("#f2cdcd"), 2));
@@ -118,7 +113,7 @@ public class UserInterface extends JFrame implements Refreshable{
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setBackground(Color.decode("#f2cdcd"));
                 button.setForeground(Color.decode("#4c4f69"));
-                button.setContentAreaFilled(true); // Fill background on hover
+                button.setContentAreaFilled(true);
             }
 
             @Override
@@ -128,24 +123,18 @@ public class UserInterface extends JFrame implements Refreshable{
             }
         });
 
-        // --- BUTTON ACTION HANDLER ---
         button.addActionListener(e -> {
             if ("testPanel".equals(menuName)) {
-                // Launch MachineMain as a new window/frame
-
-                if (MachineFactory.machineType == 0)
-                {
-                    refresh();
+                if (vendingMachine != null) {
                     SimpleVendingMachineFrame machineFrame = new SimpleVendingMachineFrame(vendingMachine);
                     machineFrame.setVisible(true);
-                }
-                else if (MachineFactory.machineType == 1)
-                {
-                    MachineMain machineMain = new MachineMain();
+                } else if (specialMachine != null) {
+                    MachineMain machineMain = new MachineMain(specialMachine);
                     machineMain.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Please create a vending machine first!", "No Machine", JOptionPane.WARNING_MESSAGE);
                 }
             } else {
-                // Switch CardLayout for Create and Modify panels
                 panels.show(mainPanel, menuName);
             }
         });
@@ -158,9 +147,19 @@ public class UserInterface extends JFrame implements Refreshable{
         return button;
     }
 
+    public CreatePanel getCreatePanel() {
+        return createPanel;
+    }
+
+    public ModifyPanel getModifyPanel() {
+        return modifyPanel;
+    }
+
     @Override
-    public void refresh()
-    {
-        this.vendingMachine = MachineFactory.getVendingMachine();
+    public void refresh() {}
+
+    public void updateMachineData(RegularVM regularVM, SpecialMachine specialVM) {
+        this.vendingMachine = regularVM;
+        this.specialMachine = specialVM;
     }
 }

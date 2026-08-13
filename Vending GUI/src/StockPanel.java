@@ -150,9 +150,19 @@ public class StockPanel extends JPanel implements Refreshable {
         addBtn.addActionListener(e -> {
             try {
                 int amountToAdd = Integer.parseInt(addAmountInput.getText().trim());
+                boolean successfulRestock;
                 if (amountToAdd > 0) {
                     // Update inventory map
-                    vendingMachine.RestockItem(itemName, amountToAdd);
+                    if (vendingMachine.getItem(itemName).getStock() + amountToAdd > 50)
+                    {
+                        successfulRestock = false;
+                    }
+                    else
+                    {
+                        vendingMachine.RestockItem(itemName, amountToAdd);
+                        successfulRestock = true;
+                    }
+
                     int updatedStock = vendingMachine.getItem(itemName).getStock();
 
                     // Update UI card label and border color
@@ -164,13 +174,25 @@ public class StockPanel extends JPanel implements Refreshable {
                             BorderFactory.createEmptyBorder(12, 12, 12, 12)
                     ));
 
+                    if (successfulRestock)
+                    {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "Successfully added " + amountToAdd + " pcs of " + itemName + ".\nNew Total: " + updatedStock + " pcs",
+                                "Restock Successful",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+                    }
+                    else
+                    {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "Amount to add of " + amountToAdd + " exceeds maximum stock for " + itemName,
+                                "Restock Unsuccessful",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+                    }
                     // Pop-up confirmation dialog
-                    JOptionPane.showMessageDialog(
-                            this,
-                            "Successfully added " + amountToAdd + " pcs of " + itemName + ".\nNew Total: " + updatedStock + " pcs",
-                            "Restock Successful",
-                            JOptionPane.INFORMATION_MESSAGE
-                    );
 
                     // Reset input field back to zero
                     addAmountInput.setText("0");
@@ -201,8 +223,6 @@ public class StockPanel extends JPanel implements Refreshable {
     @Override
     public void refresh()
     {
-        vendingMachine = MachineFactory.getVendingMachine();
-
         if (vendingMachine == null)
         {
             gridPanel.removeAll();
@@ -211,7 +231,8 @@ public class StockPanel extends JPanel implements Refreshable {
         }
 
         gridPanel.removeAll();
-        ArrayList<MachineItem> items =  vendingMachine.getItems();
+        ArrayList<MachineItem> items;
+        items = vendingMachine.getItems();
 
         for (MachineItem item : items)
         {
@@ -220,5 +241,9 @@ public class StockPanel extends JPanel implements Refreshable {
 
         gridPanel.revalidate();
         gridPanel.repaint();
+    }
+
+    public void setVendingMachine(RegularVM machine) {
+        this.vendingMachine = machine;
     }
 }

@@ -1,10 +1,11 @@
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class CashRegisterPanel extends JPanel {
+public class CashRegisterPanel extends JPanel implements Refreshable{
 
     private final Color MOCHA_BASE     = Color.decode("#1e1e2e");
     private final Color MOCHA_MANTLE   = Color.decode("#181825");
@@ -23,6 +24,9 @@ public class CashRegisterPanel extends JPanel {
     // Label displaying total money value
     private JLabel totalValueLabel;
 
+    private RegularVM vendingMachine;
+    private JPanel listPanel;
+
     public CashRegisterPanel() {
         this.setLayout(new BorderLayout());
         this.setBackground(MOCHA_BASE);
@@ -35,15 +39,12 @@ public class CashRegisterPanel extends JPanel {
         this.add(titleLabel, BorderLayout.NORTH);
 
         // Vertical List Panel (BoxLayout)
-        JPanel listPanel = new JPanel();
+        listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBackground(MOCHA_BASE);
         listPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
 
-        for (Map.Entry<String, Integer> entry : cashInventory.entrySet()) {
-            listPanel.add(createCashListRow(entry.getKey(), entry.getValue()));
-            listPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Spacing between rows
-        }
+        initializeCashListRow();
 
         // ScrollPane Setup
         JScrollPane scrollPane = new JScrollPane(listPanel);
@@ -75,6 +76,8 @@ public class CashRegisterPanel extends JPanel {
 
         // --- BOTTOM PANEL FOR TOTAL AMOUNT ---
         this.add(createTotalBottomPanel(), BorderLayout.SOUTH);
+
+        refresh();
     }
 
     /**
@@ -145,17 +148,18 @@ public class CashRegisterPanel extends JPanel {
      */
     private void updateTotalCashValue() {
         double total = 0.0;
-        for (Map.Entry<String, Integer> entry : cashInventory.entrySet()) {
-            double value = denominationValues.getOrDefault(entry.getKey(), 0.0);
-            total += value * entry.getValue();
-        }
+//        for (vendingMachine.getRegister(). : cashInventory.entrySet()) {
+//            double value = denominationValues.getOrDefault(entry.getKey(), 0.0);
+//            total += value * entry.getValue();
+//        }
+        if (vendingMachine != null) total = vendingMachine.getRegister().getTotalValue();
         totalValueLabel.setText(String.format("PHP %,.2f", total));
     }
 
     /**
      * Creates a row displaying denomination, current stock, and a restock control box
      */
-    private JPanel createCashListRow(String denominationName, int initialCount) {
+    private JPanel createCashListRow(int denominationValue, int initialCount) {
         JPanel row = new JPanel(new BorderLayout(15, 0));
         row.setBackground(MOCHA_MANTLE);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
@@ -169,7 +173,7 @@ public class CashRegisterPanel extends JPanel {
         ));
 
         // Denomination Name (Left)
-        JLabel nameLabel = new JLabel(denominationName);
+        JLabel nameLabel = new JLabel("Php " + denominationValue);
         nameLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 16));
         nameLabel.setForeground(MOCHA_TEXT);
 
@@ -206,9 +210,7 @@ public class CashRegisterPanel extends JPanel {
                 int amountToAdd = Integer.parseInt(addAmountInput.getText().trim());
                 if (amountToAdd > 0) {
                     // Update inventory map
-                    int currentStock = cashInventory.getOrDefault(denominationName, 0);
-                    int updatedStock = currentStock + amountToAdd;
-                    cashInventory.put(denominationName, updatedStock);
+                    int updatedStock = updateInventoryMap(denominationValue, amountToAdd, vendingMachine);
 
                     // Update row UI label and border color
                     countLabel.setText(updatedStock + " pcs left");
@@ -225,7 +227,7 @@ public class CashRegisterPanel extends JPanel {
                     // Pop-up confirmation dialog
                     JOptionPane.showMessageDialog(
                             this,
-                            "Successfully added " + amountToAdd + " pcs to " + denominationName + ".\nNew Total: " + updatedStock + " pcs",
+                            "Successfully added " + amountToAdd + " pcs to " + denominationValue + ".\nNew Total: " + updatedStock + " pcs",
                             "Restock Successful",
                             JOptionPane.INFORMATION_MESSAGE
                     );
@@ -247,5 +249,67 @@ public class CashRegisterPanel extends JPanel {
         row.add(rightPanel, BorderLayout.EAST);
 
         return row;
+    }
+
+    private int updateInventoryMap(int denominationValue, int amountToAdd, RegularVM vendingMachine) {
+        CashRegister register = vendingMachine.getRegister();
+        register.addCash(denominationValue, amountToAdd, 1);
+
+        int updatedStock = 0;
+        ArrayList<Integer> validValues = Denomination.getValidValues();
+        for (int i = 0; i < validValues.size(); i++) {
+            if (validValues.get(i) == denominationValue) {
+                updatedStock = register.getValueOnIndex(i);
+            }
+        }
+        return updatedStock;
+    }
+
+    private void initializeCashListRow()
+    {
+        ArrayList<Integer> validDenominations = Denomination.getValidValues();
+        CashRegister register = null;
+
+        if(vendingMachine != null)
+        {
+            register = vendingMachine.getRegister();
+        }
+
+        if (register != null) {
+            for (int i = 0; i < validDenominations.size(); i++) {
+                int denominationValue = validDenominations.get(i);
+                int initialCount = register.getValueOnIndex(i);
+
+                listPanel.add(createCashListRow(denominationValue, initialCount));
+                listPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Spacing between rows
+            }
+        } else {
+            JLabel errorLabel = new JLabel("Error: Cash register data is unavailable.");
+            errorLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 14));
+            errorLabel.setForeground(MOCHA_RED);
+            listPanel.add(errorLabel);
+        }
+    }
+
+    @Override
+    public void refresh() {
+        if (vendingMachine == null)
+        {
+            listPanel.removeAll();
+            listPanel.repaint();
+            return;
+        }
+
+        listPanel.removeAll();
+
+        updateTotalCashValue();
+        initializeCashListRow();
+
+        listPanel.revalidate();
+        listPanel.repaint();
+    }
+
+    public void setVendingMachine(RegularVM machine) {
+        this.vendingMachine = machine;
     }
 }

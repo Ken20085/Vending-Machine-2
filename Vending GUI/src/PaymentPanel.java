@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PaymentPanel extends JFrame {
@@ -15,18 +16,24 @@ public class PaymentPanel extends JFrame {
     private static final Color MOCHA_RED      = Color.decode("#f38ba8");
 
     // --- State Management ---
+    private final RegularVM vendingMachine;
     private final double totalAmountDue;
     private double totalCashHanded = 0.0;
 
-    // --- Denomination State Arrays ---
-    private static final int[] DENOMINATIONS = {1000, 500, 200, 100, 50, 20, 10, 5, 1};
-    private final int[] denominationCounts = new int[DENOMINATIONS.length];
-    private final JLabel[] countLabels = new JLabel[DENOMINATIONS.length];
+    // --- Denomination State Arrays (Synced with Denomination / CashRegister) ---
+    private final ArrayList<Integer> validDenominations = Denomination.getValidValues();
+    private final int[] denominationCounts;
+    private final JLabel[] countLabels;
 
     // UI Feedback Labels
     private JLabel totalHandedLabel;
     private JLabel changeDueLabel;
     private JButton btnFinalize;
+    private boolean paymentSuccessful = false;
+
+    public boolean isPaymentSuccessful() {
+        return paymentSuccessful;
+    }
 
     // Helper class to pass ordered items
     public static class OrderItem {
@@ -38,11 +45,15 @@ public class PaymentPanel extends JFrame {
             this.price = price;
         }
 
-        public String getName() { return name; }
-        public double getPrice() { return price; }
+        String getName() { return name; }
+        double getPrice() { return price; }
     }
 
-    public PaymentPanel(List<OrderItem> selectedItems) {
+    public PaymentPanel(RegularVM vendingMachine, List<OrderItem> selectedItems) {
+        this.vendingMachine = vendingMachine;
+        this.denominationCounts = new int[validDenominations.size()];
+        this.countLabels = new JLabel[validDenominations.size()];
+
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setResizable(false);
         this.getContentPane().setBackground(MOCHA_BASE);
@@ -61,7 +72,7 @@ public class PaymentPanel extends JFrame {
 
         this.setLayout(new BorderLayout());
 
-        // --- CENTER: TWO COLUMN LAYOUT (Summary on Left | Counter on Right) ---
+        // --- CENTER: TWO COLUMN LAYOUT ---
         JPanel mainContent = new JPanel(new GridLayout(1, 2, 20, 0));
         mainContent.setOpaque(false);
         mainContent.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
@@ -78,9 +89,6 @@ public class PaymentPanel extends JFrame {
         updateCalculations();
     }
 
-    /**
-     * LEFT COLUMN: Order Summary List & Total
-     */
     private JPanel createSummaryPanel(List<OrderItem> items) {
         JPanel container = new JPanel(new BorderLayout(0, 10));
         container.setOpaque(false);
@@ -114,7 +122,6 @@ public class PaymentPanel extends JFrame {
 
         container.add(scrollPane, BorderLayout.CENTER);
 
-        // Total Cost Banner
         JPanel totalPanel = new JPanel(new BorderLayout());
         totalPanel.setBackground(MOCHA_CRUST);
         totalPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -132,15 +139,11 @@ public class PaymentPanel extends JFrame {
 
         totalPanel.add(totalTextLabel, BorderLayout.WEST);
         totalPanel.add(totalValueLabel, BorderLayout.EAST);
-
         container.add(totalPanel, BorderLayout.SOUTH);
 
         return container;
     }
 
-    /**
-     * RIGHT COLUMN: Denomination Counter & Calculation Display
-     */
     private JPanel createDenominationPanel() {
         JPanel container = new JPanel(new BorderLayout(0, 10));
         container.setOpaque(false);
@@ -150,12 +153,11 @@ public class PaymentPanel extends JFrame {
         titleLabel.setForeground(MOCHA_TEXT);
         container.add(titleLabel, BorderLayout.NORTH);
 
-        // Grid of Denominations
-        JPanel grid = new JPanel(new GridLayout(DENOMINATIONS.length, 1, 0, 4));
+        JPanel grid = new JPanel(new GridLayout(validDenominations.size(), 1, 0, 4));
         grid.setBackground(MOCHA_MANTLE);
         grid.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
 
-        for (int i = 0; i < DENOMINATIONS.length; i++) {
+        for (int i = 0; i < validDenominations.size(); i++) {
             grid.add(createDenominationRow(i));
         }
 
@@ -166,7 +168,6 @@ public class PaymentPanel extends JFrame {
 
         container.add(scrollPane, BorderLayout.CENTER);
 
-        // Live Calculations Area (Cash Tendered & Change)
         JPanel calcPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         calcPanel.setBackground(MOCHA_CRUST);
         calcPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -198,7 +199,6 @@ public class PaymentPanel extends JFrame {
 
         calcPanel.add(handedRow);
         calcPanel.add(changeRow);
-
         container.add(calcPanel, BorderLayout.SOUTH);
 
         return container;
@@ -208,7 +208,7 @@ public class PaymentPanel extends JFrame {
         JPanel row = new JPanel(new BorderLayout());
         row.setOpaque(false);
 
-        int denomValue = DENOMINATIONS[index];
+        int denomValue = validDenominations.get(index);
 
         JLabel valueLabel = new JLabel(String.format("Php %d", denomValue));
         valueLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 13));
@@ -225,7 +225,6 @@ public class PaymentPanel extends JFrame {
         countLabel.setPreferredSize(new Dimension(28, 25));
 
         JButton btnPlus = createCounterButton("+");
-
         countLabels[index] = countLabel;
 
         btnMinus.addActionListener(e -> {
@@ -267,21 +266,29 @@ public class PaymentPanel extends JFrame {
     private void updateCalculations() {
         totalCashHanded = 0.0;
 
-        for (int i = 0; i < DENOMINATIONS.length; i++) {
-            totalCashHanded += (DENOMINATIONS[i] * denominationCounts[i]);
+        for (int i = 0; i < validDenominations.size(); i++) {
+            totalCashHanded += (validDenominations.get(i) * denominationCounts[i]);
         }
 
         totalHandedLabel.setText(String.format("Php %.2f", totalCashHanded));
 
         double change = totalCashHanded - totalAmountDue;
+        CashRegister register = vendingMachine.getRegister();
 
-        if (totalCashHanded >= totalAmountDue) {
+        // Check if the machine has enough change to dispense
+        boolean canGiveChange = register.changeIsPossible(change);
+
+        if (totalCashHanded >= totalAmountDue && canGiveChange) {
             changeDueLabel.setText(String.format("Php %.2f", change));
             changeDueLabel.setForeground(MOCHA_GREEN);
             btnFinalize.setEnabled(true);
         } else {
-            double remaining = totalAmountDue - totalCashHanded;
-            changeDueLabel.setText(String.format("-Php %.2f", remaining));
+            if (totalCashHanded < totalAmountDue) {
+                double remaining = totalAmountDue - totalCashHanded;
+                changeDueLabel.setText(String.format("-Php %.2f", remaining));
+            } else {
+                changeDueLabel.setText("Insufficient Change in VM");
+            }
             changeDueLabel.setForeground(MOCHA_RED);
             btnFinalize.setEnabled(false);
         }
@@ -319,8 +326,27 @@ public class PaymentPanel extends JFrame {
         btnFinalize = new JButton("Finalize Pay");
         styleButton(btnFinalize, MOCHA_GREEN, MOCHA_BASE);
         btnFinalize.addActionListener(e -> {
+            CashRegister register = vendingMachine.getRegister();
+
+            // 1. Add customer's input cash to the register pool (type 0 = customer input)
+            for (int i = 0; i < validDenominations.size(); i++) {
+                int count = denominationCounts[i];
+                if (count > 0) {
+                    register.addCash(validDenominations.get(i), count, 0);
+                }
+            }
+
+            // 2. Calculate and deduct change
+            double change = totalCashHanded - totalAmountDue;
+            ArrayList<Integer> changeDenominations = register.calculateChange((int) change);
+            if (changeDenominations != null) {
+                register.deductCash(changeDenominations);
+            }
+
+            paymentSuccessful = true;
+
             JOptionPane.showMessageDialog(this,
-                    String.format("Payment Successful!\nChange: Php %.2f", (totalCashHanded - totalAmountDue)),
+                    String.format("Payment Successful!\nChange: Php %.2f", change),
                     "Receipt", JOptionPane.INFORMATION_MESSAGE);
             this.dispose();
         });

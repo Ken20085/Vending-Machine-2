@@ -120,4 +120,52 @@ public class History{
         }
         System.out.println("==================================================");
     }
+
+    /**
+     * Generates and returns the report as a String for UI panels.
+     * @param currentItems live amount of items to calculate ending stock and revenue
+     * @return formatted report string
+     */
+    public String generateReport(ArrayList<MachineItem> currentItems) {
+        StringBuilder sb = new StringBuilder();
+        double totalRevenue = 0.0;
+
+        sb.append("==================================================\n");
+        sb.append("              VENDING MACHINE REPORT              \n");
+        sb.append("==================================================\n");
+        sb.append(String.format("%-15s | %-10s | %-10s | %10s\n", "Item Name", "Starting", "Ending", "Units Sold"));
+        sb.append("--------------------------------------------------\n");
+
+        for (int i = 0; i < currentItems.size(); i++) {
+            if (i >= startingInventory.length || i >= soldPerSlot.length) break;
+            MachineItem item = currentItems.get(i);
+
+            double slotRevenue = this.soldPerSlot[i] * item.getPrice();
+            totalRevenue += slotRevenue;
+
+            sb.append(String.format("%-15s | %-10d | %-10d | %10d\n",
+                    item.getName(),
+                    this.startingInventory[i],
+                    item.getStock(),
+                    this.soldPerSlot[i]));
+        }
+
+        sb.append("--------------------------------------------------\n");
+        sb.append(String.format("Total Revenue: %.2f\n", totalRevenue));
+        sb.append("--------------------------------------------------\n");
+        sb.append("-------------------------------------------------\n");
+        sb.append("                    EVENT LOGS                   \n");
+        sb.append("-------------------------------------------------\n");
+
+        if (this.transactions.isEmpty()){
+            sb.append("No events recorded for this cycle.\n");
+        } else {
+            for (int i = 0; i < this.transactions.size(); i++){
+                sb.append("(").append(i + 1).append(") ").append(this.transactions.get(i)).append("\n");
+            }
+        }
+        sb.append("==================================================");
+
+        return sb.toString();
+    }
 }

@@ -35,7 +35,7 @@ public class CashRegister {
     {
         for (int denominations : Denomination.getValidValues())
         {
-            addCash(denominations, 0, 1);
+            addCash(denominations, 10, 1);
         }
     }
 
@@ -212,6 +212,13 @@ public class CashRegister {
             total += validValues.get(i) * changePool.get(i);
         }
         return total;
+    }
+
+    public int getValueOnIndex(int index)
+    {
+        int value;
+        value = changePool.get(index);
+        return value;
     }
 
     /**

@@ -50,14 +50,14 @@ public class RegularVM {
 
     public void GeneratePresetItems()
     {
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
-        items.add(new MachineItem("Pepperoni", 20, 2, 200, true));
+        items.add(new MachineItem("Pepperoni", 20, 2, 200, false));
+        items.add(new MachineItem("Classic Pizza", 20, 2, 200, false));
+        items.add(new MachineItem("Hawaiian", 20, 2, 200, false));
+        items.add(new MachineItem("Garlic Sticks", 20, 2, 200, false));
+        items.add(new MachineItem("Coke 330ml", 20, 2, 200, false));
+        items.add(new MachineItem("Iced Tea", 20, 2, 200, false));
+        items.add(new MachineItem("Bottled Water", 20, 2, 200, false));
+        items.add(new MachineItem("Sprite 330ml", 20, 2, 200, false));
 
         this.itemCount = items.size();
     }
@@ -200,10 +200,5 @@ public class RegularVM {
         }
 
         // Print current denominations in change pool
-    }
-
-    public ArrayList<MachineItem> getItemsToDisplay()
-    {
-        return items;
     }
 }

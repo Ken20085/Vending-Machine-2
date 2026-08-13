@@ -15,6 +15,8 @@ public class ModifyPanel extends JPanel {
 
     private final DashboardPanel dashboardPanel = new DashboardPanel();
     private final StockPanel stockPanel = new StockPanel();
+    private final CashRegisterPanel  cashRegisterPanel = new CashRegisterPanel();
+    private final HistoryPanel historyPanel = new HistoryPanel();
 
     public ModifyPanel() {
         this.setLayout(new GridBagLayout());
@@ -28,6 +30,13 @@ public class ModifyPanel extends JPanel {
         c.fill = GridBagConstraints.BOTH;
         JPanel config = configPanel();
         this.add(config, c);
+    }
+
+    public void setVendingMachine(RegularVM machine) {
+        dashboardPanel.setVendingMachine(machine);
+        stockPanel.setVendingMachine(machine);
+        cashRegisterPanel.setVendingMachine(machine);
+        historyPanel.setVendingMachine(machine);
     }
 
     private JPanel configPanel()
@@ -45,9 +54,10 @@ public class ModifyPanel extends JPanel {
         configHolder.add(stockPanel, "Item Stock");
 
         // --- ADD CASH REGISTER PANEL HERE ---
-        configHolder.add(new CashRegisterPanel(), "Cash Register");
+        configHolder.add(cashRegisterPanel, "Cash Register");
 
-        configHolder.add(createPlaceholderPanel("History View"), "History");
+        // --- ADD HISTORY REGISTER PANEL HERE ---
+        configHolder.add(historyPanel, "History");
 
         // Set initial view to the blank/placeholder panel
         configPanels.show(configHolder, "SelectMenu");
@@ -157,10 +167,11 @@ public class ModifyPanel extends JPanel {
 
                 // --- REFRESH LOGIC ---
                 // If the panel implements Refreshable, refresh it before showing
-                if ("Dashboard".equals(cardName)) {
-                    dashboardPanel.refresh();
-                } else if ("Item Stock".equals(cardName)) {
-                    stockPanel.refresh();
+                switch (cardName) {
+                    case "Dashboard" -> dashboardPanel.refresh();
+                    case "Item Stock" -> stockPanel.refresh();
+                    case "Cash Register" -> cashRegisterPanel.refresh();
+                    case "History" -> historyPanel.refresh();
                 }
 
                 configPanels.show(configHolder, cardName);

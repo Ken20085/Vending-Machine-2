@@ -3,7 +3,7 @@ public class MachineItem {
     private double price;
     private int stock;
     private double calories;
-    private boolean sellableIndiv;
+    private boolean infiniteStock;
 
     private final int maxStock = 50;
 
@@ -11,11 +11,11 @@ public class MachineItem {
 //        this.name = name;
 //    }
 
-    public MachineItem(String name, double price, int stock, double calories, boolean sellableIndiv) {
+    public MachineItem(String name, double price, int stock, double calories, boolean infiniteStock) {
         this.name = name;
         this.price = price;
         this.calories = calories;
-        this.sellableIndiv = sellableIndiv;
+        this.infiniteStock = infiniteStock;
 
         if (stock > maxStock)
         {
@@ -27,10 +27,6 @@ public class MachineItem {
         {
             this.stock = stock;
         }
-    }
-
-    public MachineItem(String name, double price, int stock, double calories){
-        this(name ,price,stock,calories,true);
     }
 
     // ================== region getters ===========
@@ -50,9 +46,9 @@ public class MachineItem {
     {
         return calories;
     }
-    public boolean isSellableIndiv()
+    public boolean isInfiniteStock()
     {
-        return sellableIndiv;
+        return infiniteStock;
     }
     // ================= endregion ===============
 
@@ -65,15 +61,18 @@ public class MachineItem {
     {
         this.calories = calories;
     }
-    public void setSellableIndiv(boolean sellableIndiv)
+    public void setInfiniteStock(boolean infiniteStock)
     {
-        this.sellableIndiv = sellableIndiv;
+        this.infiniteStock = infiniteStock;
     }
     // ============== endregion ================
 
     public void transact()
     {
-        stock -= 1;
+        if (!infiniteStock && stock > 0)
+        {
+            stock -= 1;
+        }
     }
     public boolean restock(int quantity)
     {

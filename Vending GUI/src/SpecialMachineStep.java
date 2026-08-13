@@ -13,23 +13,11 @@ public class SpecialMachineStep {
         return name;
     }
 
+    public void addItem(MachineItem item) {
+        this.items.add(item);
+    }
+
     public ArrayList<MachineItem> getItems() {
         return items;
-    }
-
-    public void addItem(MachineItem item){
-        items.add(item);
-    }
-
-    public void removeItem(MachineItem item){
-        items.remove(item);
-    }
-
-    public double getStepCalories(){
-        double calories = 0;
-        for (MachineItem item : items){
-            calories += item.getCalories();
-        }
-        return calories;
     }
 }

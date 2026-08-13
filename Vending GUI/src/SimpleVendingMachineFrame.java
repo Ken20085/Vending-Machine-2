@@ -20,7 +20,6 @@ public class SimpleVendingMachineFrame extends JFrame {
     // Inventory and inputs tracking
 
     private RegularVM vendingMachine;
-    private final Map<String, ProductItem> inventory = getHardcodedInventory();
     private final Map<String, JTextField> quantityInputs = new LinkedHashMap<>();
 
     // UI Reference Buttons
@@ -286,20 +285,19 @@ public class SimpleVendingMachineFrame extends JFrame {
     private void openPaymentPanel() {
         List<PaymentPanel.OrderItem> orderList = new ArrayList<>();
 
-        for (Map.Entry<String, JTextField> entry : quantityInputs.entrySet()) {
-            String itemName = entry.getKey();
-            JTextField input = entry.getValue();
+        for (MachineItem item : vendingMachine.getItems()) {
+            JTextField input = quantityInputs.get(item.getName());
 
-            try {
-                int qty = Integer.parseInt(input.getText().trim());
-                MachineItem product = vendingMachine.getItem(itemName);
-
-                if (product != null && qty > 0) {
-                    for (int i = 0; i < qty; i++) {
-                        orderList.add(new PaymentPanel.OrderItem(itemName, product.getPrice()));
+            if (input != null) {
+                try {
+                    int qty = Integer.parseInt(input.getText().trim());
+                    if (qty > 0) {
+                        for (int i = 0; i < qty; i++) {
+                            orderList.add(new PaymentPanel.OrderItem(item.getName(), item.getPrice()));
+                        }
                     }
-                }
-            } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {}
+            }
         }
 
         if (orderList.isEmpty()) {
@@ -311,7 +309,41 @@ public class SimpleVendingMachineFrame extends JFrame {
         }
 
         // Launch PaymentPanel with constructed order list
-        PaymentPanel paymentWindow = new PaymentPanel(orderList);
+        PaymentPanel paymentWindow = new PaymentPanel(vendingMachine, orderList);
         paymentWindow.setVisible(true);
+
+        paymentWindow.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent e) {
+                if (paymentWindow.isPaymentSuccessful())
+                {
+                    for (int i = 0; i < vendingMachine.getItems().size(); i++) {
+                        MachineItem item = vendingMachine.getItems().get(i); // this only takes away items in stock checklist for SpecialMachine
+                        JTextField input = quantityInputs.get(item.getName());
+
+                        if (input != null) {
+                            try {
+                                int qty = Integer.parseInt(input.getText().trim());
+                                // Dispense the item for each quantity purchased
+                                for (int j = 0; j < qty; j++) {
+                                    vendingMachine.dispenseItem(i, item.getPrice());
+                                }
+                            } catch (NumberFormatException ignored) {}
+                        }
+                    }
+
+                    getContentPane().removeAll();
+                    JLabel headerLabel = new JLabel("Simple Vending Machine");
+                    headerLabel.setFont(new Font("JetBrains Mono", Font.BOLD, 26));
+                    headerLabel.setForeground(MOCHA_TEXT);
+                    headerLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+                    add(headerLabel, BorderLayout.NORTH);
+                    add(createProductGridPanel(), BorderLayout.CENTER);
+                    add(createBottomPanel(), BorderLayout.SOUTH);
+                    revalidate();
+                    repaint();
+                }
+            }
+        });
     }
 }

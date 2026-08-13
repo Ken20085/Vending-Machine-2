@@ -145,8 +145,6 @@ public class DashboardPanel extends JPanel implements Refreshable {
 
     @Override
     public void refresh() {
-        vendingMachine = MachineFactory.getVendingMachine();
-
         if (vendingMachine == null)
         {
             gridPanel.removeAll();
@@ -154,7 +152,7 @@ public class DashboardPanel extends JPanel implements Refreshable {
             return;
         }
 
-        ArrayList<MachineItem> items =  vendingMachine.getItems();
+        ArrayList<MachineItem> items = vendingMachine.getItems();
 
         gridPanel.removeAll();
         for (MachineItem item : items)
@@ -164,5 +162,9 @@ public class DashboardPanel extends JPanel implements Refreshable {
 
         gridPanel.revalidate();
         gridPanel.repaint();
+    }
+
+    public void setVendingMachine(RegularVM machine) {
+        this.vendingMachine = machine;
     }
 }

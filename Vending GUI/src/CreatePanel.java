@@ -130,13 +130,6 @@ public class CreatePanel extends JPanel {
         });
 
         // Create button: Prints to console, resets form, and returns to menu
-        btnCreate.addActionListener(e -> {
-
-            MachineFactory.createMachine(getSelectedType(), getVendingMachineName());
-
-            resetForm();
-            returnToMenuPanel();
-        });
 
         actionPanel.add(btnCancel);
         actionPanel.add(btnCreate);

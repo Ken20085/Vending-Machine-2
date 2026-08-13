@@ -161,10 +161,10 @@ public class VendingMachineFactory {
         String input;
 
         // if special vending machine
-        if (machine instanceof SpecialMachine){
-            RunSpecialVendingMachine((SpecialMachine) machine);
-            return;
-        }
+//        if (machine instanceof SpecialMachine){
+//            RunSpecialVendingMachine((SpecialMachine) machine);
+//            return;
+//        }
 
         // highest price set up
         for (MachineItem item : machine.getItems())
@@ -351,10 +351,10 @@ public class VendingMachineFactory {
         MachineItem cheese     = new MachineItem("Cheese", 70.0, 10, 150, true);
         MachineItem pepperoni  = new MachineItem("Pepperoni", 35.0, 10, 100, true);
 
-        vm.getItems().add(dough);
-        vm.getItems().add(sauce);
-        vm.getItems().add(cheese);
-        vm.getItems().add(pepperoni);
+//        vm.getItems().add(dough);
+//        vm.getItems().add(sauce);
+//        vm.getItems().add(cheese);
+//        vm.getItems().add(pepperoni);
 
         SpecialMachineStep step1 = new SpecialMachineStep("Dough Base");
         step1.addItem(dough);
@@ -366,58 +366,58 @@ public class VendingMachineFactory {
         step3.addItem(cheese);
         step3.addItem(pepperoni);
 
-        vm.addStep(step1);
-        vm.addStep(step2);
-        vm.addStep(step3);
+//        vm.addStep(step1);
+//        vm.addStep(step2);
+//        vm.addStep(step3);
     }
 
-    static void RunSpecialVendingMachine(SpecialMachine specialMachine){
-        ArrayList<MachineItem> selectedItems = new ArrayList<>();
-
-        System.out.println("=== Custom Pizza Order for " + specialMachine.getName() + " ===");
-
-        //display available ingredients
-        ArrayList<MachineItem> availableItems = specialMachine.getItems();
-        for (int i = 0; i < availableItems.size(); i++){
-            MachineItem item = availableItems.get(i);
-            System.out.printf("[%d] %s - Php %.2f (%f cal)\n", (i+1), item.getName(), item.getPrice(), item.getCalories());
-        }
-
-        //loop to let user choose ingredients
-        while (true){
-            System.out.print("Select item index to add to pizza (0 to finish): ");
-            String choiceStr = scanner.nextLine();
-            int idx = Integer.parseInt(choiceStr);
-
-            if (idx == 0){
-                break;
-            } else if (idx > 0 && idx <= availableItems.size()){
-                MachineItem chosen = availableItems.get(idx - 1);
-                selectedItems.add(chosen);
-                System.out.println("Added " + chosen.getName() + " to order.");
-            } else {
-                System.out.println("Invalid item index!");
-            }
-        }
-
-        if (selectedItems.isEmpty()){
-            System.out.println("No items selected. Cancelling your order!");
-            return;
-        }
-
-        double total = specialMachine.calculateTotalPrice(selectedItems);
-        System.out.printf("\nTotal Order Price: Php %.2f\n", total);
-
-        Helper.MoneyInstructions();
-        System.out.print("Insert Payment Input: ");
-        String input = scanner.nextLine();
-        double insertedMoney = Helper.parseMoney(input, specialMachine, 0);
-
-        boolean success = specialMachine.prepareAndDispense(selectedItems, insertedMoney);
-
-        if (!success){
-            System.out.printf("Transcation has failed! Returning payment: Php %.2f\n", insertedMoney);
-            Helper.undoParse(input, specialMachine, 0);
-        }
-    }
+//    static void RunSpecialVendingMachine(SpecialMachine specialMachine){
+//        ArrayList<MachineItem> selectedItems = new ArrayList<>();
+//
+//        System.out.println("=== Custom Pizza Order for " + specialMachine.getName() + " ===");
+//
+//        //display available ingredients
+//        ArrayList<MachineItem> availableItems = specialMachine.getItems();
+//        for (int i = 0; i < availableItems.size(); i++){
+//            MachineItem item = availableItems.get(i);
+//            System.out.printf("[%d] %s - Php %.2f (%f cal)\n", (i+1), item.getName(), item.getPrice(), item.getCalories());
+//        }
+//
+//        //loop to let user choose ingredients
+//        while (true){
+//            System.out.print("Select item index to add to pizza (0 to finish): ");
+//            String choiceStr = scanner.nextLine();
+//            int idx = Integer.parseInt(choiceStr);
+//
+//            if (idx == 0){
+//                break;
+//            } else if (idx > 0 && idx <= availableItems.size()){
+//                MachineItem chosen = availableItems.get(idx - 1);
+//                selectedItems.add(chosen);
+//                System.out.println("Added " + chosen.getName() + " to order.");
+//            } else {
+//                System.out.println("Invalid item index!");
+//            }
+//        }
+//
+//        if (selectedItems.isEmpty()){
+//            System.out.println("No items selected. Cancelling your order!");
+//            return;
+//        }
+//
+//        double total = specialMachine.calculateTotalPrice(selectedItems);
+//        System.out.printf("\nTotal Order Price: Php %.2f\n", total);
+//
+//        Helper.MoneyInstructions();
+//        System.out.print("Insert Payment Input: ");
+//        String input = scanner.nextLine();
+//        double insertedMoney = Helper.parseMoney(input, specialMachine, 0);
+//
+//        boolean success = specialMachine.prepareAndDispense(selectedItems, insertedMoney);
+//
+//        if (!success){
+//            System.out.printf("Transcation has failed! Returning payment: Php %.2f\n", insertedMoney);
+//            Helper.undoParse(input, specialMachine, 0);
+//        }
+//    }
 }

@@ -3,6 +3,7 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +25,17 @@ public class MachineMain extends JFrame {
     private final List<ScalableItemCard> scalableCards = new ArrayList<>();
     private JPanel mainPanel; // Field accessible by getSelectedItems()
 
-    public MachineMain() {
+    private SpecialMachine specialMachine;
+
+    public MachineMain(SpecialMachine specialMachine) {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
         this.getContentPane().setBackground(MOCHA_BASE);
         this.setSize(950, 700);
         this.setLocationRelativeTo(null);
-        this.setTitle("Pizza Ordering Kiosk");
+        this.setTitle("Special Vending Machine");
+
+        this.specialMachine = specialMachine;
 
         this.setLayout(new BorderLayout());
 
@@ -202,13 +207,19 @@ public class MachineMain extends JFrame {
         switch (sectionIndex) {
             case 0 -> {
                 // Section 1: Pizza Size
-                String[] pizzaSizes = {"Personal", "Small", "Medium", "Large", "Extra Large"};
-                double[] basePrices = {80.0, 100.0, 130.0, 190.0, 250.0};
+                ArrayList<String> pizzaSizes = new ArrayList<>();
+                ArrayList<Double> basePrices = new ArrayList<>();
                 double[] scaleFactors = {1.0, 1.25, 1.5, 1.75, 2.0};
 
-                for (int j = 0; j < pizzaSizes.length; j++) {
+                for (MachineItem item : specialMachine.getStepItems(0))
+                {
+                    pizzaSizes.add(item.getName());
+                    basePrices.add(item.getPrice());
+                }
+
+                for (int j = 0; j < specialMachine.getStepItems(0).size(); j++) {
                     double factor = scaleFactors[j];
-                    JPanel card = createOptionItemPanel(sectionPanel, pizzaSizes[j], String.format("Php %.2f", basePrices[j]), basePrices[j], false);
+                    JPanel card = createOptionItemPanel(sectionPanel, pizzaSizes.get(j), String.format("Php %.2f", basePrices.get(j)), basePrices.get(j), false);
 
                     if (j == 0) {
                         sectionPanel.setInitialSelection(card);
@@ -229,43 +240,72 @@ public class MachineMain extends JFrame {
             }
             case 1 -> {
                 // Section 2: How many cuts
-                String[] cutOptions = {"4 cuts", "6 cuts", "8 cuts", "Square Cuts"};
+                ArrayList<String> cutOptions = new ArrayList<>();
+
+                for (MachineItem item : specialMachine.getStepItems(1))
+                {
+                    cutOptions.add(item.getName());
+                }
                 for (String option : cutOptions) {
                     optionsGrid.add(createOptionItemPanel(sectionPanel, option, "Free", 0.0, false));
                 }
             }
             case 2 -> {
                 // Section 3: Sauces
-                String[] sauceOptions = {"No Sauce", "Marinara", "Garlic", "Pesto", "White"};
-                double[] baseSaucePrices = {5.0, 6.0, 7.0, 10.0, 13.0};
+                ArrayList<String> sauceOptions = new ArrayList<>();
+                ArrayList<Double> baseSaucePrices = new ArrayList<>();
 
-                for (int i = 0; i < sauceOptions.length; i++) {
-                    optionsGrid.add(createOptionItemPanel(sectionPanel, sauceOptions[i], "", baseSaucePrices[i], true));
+                for (MachineItem item : specialMachine.getStepItems(2))
+                {
+                    sauceOptions.add(item.getName());
+                    baseSaucePrices.add(item.getPrice());
+                }
+
+                for (int i = 0; i < sauceOptions.size(); i++) {
+                    optionsGrid.add(createOptionItemPanel(sectionPanel, sauceOptions.get(i), "", baseSaucePrices.get(i), true));
                 }
             }
             case 3 -> {
                 // Section 4: Cheese Options
-                String[] cheeseOptions = {"No Cheese", "Include Cheese"};
+                ArrayList<String> cheeseOptions = new ArrayList<>();
+
+                for (MachineItem item : specialMachine.getStepItems(3))
+                {
+                    cheeseOptions.add(item.getName());
+                }
+
                 for (String option : cheeseOptions) {
                     optionsGrid.add(createOptionItemPanel(sectionPanel, option, "Free", 0.0, false));
                 }
             }
             case 4 -> {
                 // Section 5: Toppings
-                String[] toppings = {"Pepperoni", "Mushroom", "Pineapple", "Ham", "Beef mince", "Basil leaves", "Onion"};
-                double[] baseToppingPrices = {10.0, 10.0, 10.0, 10.0, 20.0, 10.0, 10.0};
+                ArrayList<String> toppings = new ArrayList<>();
+                ArrayList<Double> baseToppingPrices = new ArrayList<>();
 
-                for (int i = 0; i < toppings.length; i++) {
-                    optionsGrid.add(createOptionItemPanel(sectionPanel, toppings[i], "", baseToppingPrices[i], true));
+                for (MachineItem item : specialMachine.getStepItems(4))
+                {
+                    toppings.add(item.getName());
+                    baseToppingPrices.add(item.getPrice());
+                }
+
+                for (int i = 0; i < toppings.size(); i++) {
+                    optionsGrid.add(createOptionItemPanel(sectionPanel, toppings.get(i), "", baseToppingPrices.get(i), true));
                 }
             }
             case 5 -> {
                 // Section 6: Extras
-                String[] extrasOptions = {"Thin Crust", "Cheese Crust"};
-                double[] baseExtraPrices = {40.0, 60.0};
+                ArrayList<String> extrasOptions = new ArrayList<>();
+                ArrayList<Double> baseExtraPrices = new ArrayList<>();
 
-                for (int i = 0; i < extrasOptions.length; i++) {
-                    optionsGrid.add(createOptionItemPanel(sectionPanel, extrasOptions[i], "", baseExtraPrices[i], true));
+                for (MachineItem item : specialMachine.getStepItems(5))
+                {
+                    extrasOptions.add(item.getName());
+                    baseExtraPrices.add(item.getPrice());
+                }
+
+                for (int i = 0; i < extrasOptions.size(); i++) {
+                    optionsGrid.add(createOptionItemPanel(sectionPanel, extrasOptions.get(i), "", baseExtraPrices.get(i), true));
                 }
             }
         }
@@ -368,14 +408,72 @@ public class MachineMain extends JFrame {
         // Launch PaymentPanel on click
         btnNext.addActionListener(e -> {
             List<PaymentPanel.OrderItem> currentOrder = getSelectedItems();
-            PaymentPanel paymentPanel = new PaymentPanel(currentOrder);
+
+            if (currentOrder.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Please select at least one item before proceeding to checkout.",
+                        "No Items Selected",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            StringBuilder message = new StringBuilder();
+            boolean outOfStock = false;
+
+            // Check for stock first without mutating the cart
+            for (PaymentPanel.OrderItem orderItem : currentOrder) {
+                for (MachineItem item : specialMachine.getItems()) {
+                    String itemName = item.getName();
+                    if (orderItem.getName().equals(itemName)) {
+                        if (specialMachine.getItem(itemName).getStock() <= 0) {
+                            message.append(orderItem.getName()).append("\n");
+                            outOfStock = true;
+                        }
+                    }
+                }
+            }
+
+            if (outOfStock) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "The following item(s) are currently out of stock:\n" + message,
+                        "Out of Stock",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return; // Halt checkout process
+            }
+
+            PaymentPanel paymentPanel = new PaymentPanel(specialMachine, currentOrder);
             paymentPanel.setVisible(true);
+
+            paymentPanel.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+
+                    if (paymentPanel.isPaymentSuccessful()) {
+                        // Add items to cart/dispense only after successful payment
+                        for (PaymentPanel.OrderItem orderItem : currentOrder) {
+                            specialMachine.addToCart(orderItem.getName());
+                        }
+
+                        specialMachine.prepareAndDispense();
+
+                        // Optional: Reset selections or close main window if desired
+                        PanelProcessing();
+                    }
+                }
+            });
         });
 
         bottomPanel.add(btnCancel);
         bottomPanel.add(btnNext);
 
         return bottomPanel;
+    }
+
+    private void PanelProcessing()
+    {
+        new ProcessPanel(specialMachine.getActions()).setVisible(true);
     }
 
     private void styleButton(JButton button, Color bgColor, Color fgColor) {
