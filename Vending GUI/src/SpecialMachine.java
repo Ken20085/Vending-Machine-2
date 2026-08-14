@@ -208,7 +208,7 @@ public class SpecialMachine extends RegularVM{
         stockToCheckList.addAll(getStepItems(4));
 
         // Cheese Crust
-        stockToCheckList.add(getStepItems(5).getLast());
+        stockToCheckList.add(getStepItems(5).get(getStepItems(5).size() - 1));
     }
 
     /**
